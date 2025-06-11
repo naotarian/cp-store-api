@@ -75,7 +75,7 @@ class AuthController extends Controller
         }
 
         /** @var User $user */
-        $user = Auth::guard('api')->user();
+        $user = Auth::user();
         
         // APIトークンを生成
         $token = $user->generateApiToken();
