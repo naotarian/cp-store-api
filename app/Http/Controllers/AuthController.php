@@ -67,15 +67,15 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (!Auth::attempt($credentials)) {
+        if (!Auth::guard('api')->attempt($credentials)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'パスワードが正しくありません。',
             ], 401)->header('Access-Control-Allow-Origin', '*');
         }
 
-        /** @var User $user */
-        $user = Auth::user();
+       /** @var User $user */
+        $user = Auth::guard('api')->user();
         
         // APIトークンを生成
         $token = $user->generateApiToken();
