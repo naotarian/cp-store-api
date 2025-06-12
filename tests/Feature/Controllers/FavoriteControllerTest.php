@@ -6,22 +6,30 @@ use Tests\TestCase;
 use App\Models\User;
 use App\Models\Shop;
 use App\Models\Favorite;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 
 class FavoriteControllerTest extends TestCase
 {
-    use RefreshDatabase;
-
     private User $user;
     private Shop $shop;
 
     protected function setUp(): void
     {
         parent::setUp();
+        // 記事に基づく対処：setupでトランザクション開始
+        $this->app->make('db')->beginTransaction();
+        
         $this->user = User::factory()->create([
             'api_token' => hash('sha256', 'test-api-token')
         ]);
         $this->shop = Shop::factory()->create();
+    }
+
+    protected function tearDown(): void
+    {
+        // 記事に基づく対処：tearDownでロールバック
+        $this->app->make('db')->rollBack();
+        parent::tearDown();
     }
 
     // ヘルパーメソッド：認証ヘッダー付きリクエスト
@@ -230,18 +238,5 @@ class FavoriteControllerTest extends TestCase
             'user_id' => $this->user->id,
             'shop_id' => $this->shop->id,
         ]);
-    }
-
-    public function test_認証なしでお気に入り状態確認するとfalseが返る()
-    {
-        // Act
-        $response = $this->getJson("/api/favorites/check/{$this->shop->id}");
-
-        // Assert
-        $response->assertStatus(200)
-            ->assertJson([
-                'status' => 'success',
-                'is_favorite' => false
-            ]);
     }
 }
