@@ -38,7 +38,10 @@ Route::get('shops/{shopId}/reviews', [ReviewController::class, 'getByShop']);
 
 // レビュー関連エンドポイント
 Route::get('reviews', [ReviewController::class, 'index']);
+Route::get('reviews/{id}', [ReviewController::class, 'show']);
 Route::post('reviews', [ReviewController::class, 'store'])->middleware(\App\Http\Middleware\ApiTokenMiddleware::class);
+Route::put('reviews/{id}', [ReviewController::class, 'update'])->middleware(\App\Http\Middleware\ApiTokenMiddleware::class);
+Route::delete('reviews/{id}', [ReviewController::class, 'destroy'])->middleware(\App\Http\Middleware\ApiTokenMiddleware::class);
 
 // お気に入り関連エンドポイント
 // 認証必要

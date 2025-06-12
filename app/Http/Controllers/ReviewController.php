@@ -2,26 +2,74 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Review;
+use App\UseCases\Review\GetAllReviewsUseCase;
+use App\UseCases\Review\GetReviewByIdUseCase;
+use App\UseCases\Review\GetReviewsByShopIdUseCase;
+use App\UseCases\Review\CreateReviewUseCase;
+use App\UseCases\Review\UpdateReviewUseCase;
+use App\UseCases\Review\DeleteReviewUseCase;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
+use Exception;
 
 class ReviewController extends Controller
 {
+    public function __construct(
+        private GetAllReviewsUseCase $getAllReviewsUseCase,
+        private GetReviewByIdUseCase $getReviewByIdUseCase,
+        private GetReviewsByShopIdUseCase $getReviewsByShopIdUseCase,
+        private CreateReviewUseCase $createReviewUseCase,
+        private UpdateReviewUseCase $updateReviewUseCase,
+        private DeleteReviewUseCase $deleteReviewUseCase
+    ) {}
+
     /**
      * Display a listing of the reviews.
      */
     public function index(): JsonResponse
     {
-        $reviews = Review::with('shop')->get();
-        
-        return response()->json([
-            'status' => 'success',
-            'data' => $reviews
-        ])->header('Access-Control-Allow-Origin', '*')
-          ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-          ->header('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept, Authorization, X-Requested-With');
+        try {
+            $reviews = $this->getAllReviewsUseCase->execute();
+            
+            return response()->json([
+                'status' => 'success',
+                'data' => $reviews
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Display the specified review.
+     */
+    public function show(string $id): JsonResponse
+    {
+        try {
+            $review = $this->getReviewByIdUseCase->execute($id);
+            
+            if (!$review) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'レビューが見つかりません'
+                ], 404);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $review
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -29,17 +77,19 @@ class ReviewController extends Controller
      */
     public function getByShop($shopId): JsonResponse
     {
-        $reviews = Review::with('user:id,name')
-                        ->where('shop_id', $shopId)
-                        ->orderBy('created_at', 'desc')
-                        ->get();
-        
-        return response()->json([
-            'status' => 'success',
-            'data' => $reviews
-        ])->header('Access-Control-Allow-Origin', '*')
-          ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-          ->header('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept, Authorization, X-Requested-With');
+        try {
+            $reviews = $this->getReviewsByShopIdUseCase->execute($shopId);
+            
+            return response()->json([
+                'status' => 'success',
+                'data' => $reviews
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -51,41 +101,107 @@ class ReviewController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => '認証が必要です'
-            ], 401)->header('Access-Control-Allow-Origin', '*');
+            ], 401);
         }
 
-        $validated = $request->validate([
-            'shop_id' => 'required|exists:shops,id',
-            'rating' => 'required|numeric|between:1,5',
-            'comment' => 'nullable|string|max:1000',
-        ]);
+        try {
+            $validated = $request->validate([
+                'shop_id' => 'required|exists:shops,id',
+                'rating' => 'required|numeric|between:1,5',
+                'comment' => 'nullable|string|max:1000',
+            ]);
 
-        // 同じユーザーが同じ店舗に複数レビューを投稿することを防ぐ
-        $existingReview = Review::where('shop_id', $validated['shop_id'])
-                               ->where('user_id', Auth::id())
-                               ->first();
+            $validated['user_id'] = Auth::id();
 
-        if ($existingReview) {
+            $review = $this->createReviewUseCase->execute($validated);
+
+            // レビュー作成後、ユーザー情報も含めて返す
+            $review->load('user:id,name');
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'レビューを投稿しました',
+                'data' => $review
+            ], 201);
+        } catch (ValidationException $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'この店舗にはすでにレビューを投稿されています'
-            ], 409)->header('Access-Control-Allow-Origin', '*');
+                'message' => 'バリデーションエラー',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 409);
+        }
+    }
+
+    /**
+     * Update the specified review in storage.
+     */
+    public function update(Request $request, string $id): JsonResponse
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => '認証が必要です'
+            ], 401);
         }
 
-        $review = Review::create([
-            'shop_id' => $validated['shop_id'],
-            'user_id' => Auth::id(),
-            'rating' => $validated['rating'],
-            'comment' => $validated['comment'],
-        ]);
+        try {
+            $validated = $request->validate([
+                'rating' => 'required|numeric|between:1,5',
+                'comment' => 'nullable|string|max:1000',
+            ]);
 
-        // レビュー作成後、ユーザー情報も含めて返す
-        $review->load('user:id,name');
+            $review = $this->updateReviewUseCase->execute($id, $validated);
 
-        return response()->json([
-            'status' => 'success',
-            'message' => 'レビューを投稿しました',
-            'data' => $review
-        ], 201)->header('Access-Control-Allow-Origin', '*');
+            return response()->json([
+                'status' => 'success',
+                'message' => 'レビューを更新しました',
+                'data' => $review
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'バリデーションエラー',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (Exception $e) {
+            $statusCode = str_contains($e->getMessage(), '見つかりません') ? 404 : 400;
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], $statusCode);
+        }
+    }
+
+    /**
+     * Remove the specified review from storage.
+     */
+    public function destroy(string $id): JsonResponse
+    {
+        if (!Auth::check()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => '認証が必要です'
+            ], 401);
+        }
+
+        try {
+            $this->deleteReviewUseCase->execute($id);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'レビューを削除しました'
+            ]);
+        } catch (Exception $e) {
+            $statusCode = str_contains($e->getMessage(), '見つかりません') ? 404 : 400;
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], $statusCode);
+        }
     }
 }

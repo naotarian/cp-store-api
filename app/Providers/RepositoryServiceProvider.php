@@ -7,6 +7,8 @@ use App\Repositories\Favorite\FavoriteRepositoryInterface;
 use App\Repositories\Favorite\FavoriteRepository;
 use App\Repositories\Shop\ShopRepositoryInterface;
 use App\Repositories\Shop\ShopRepository;
+use App\Repositories\Review\ReviewRepositoryInterface;
+use App\Repositories\Review\ReviewRepository;
 
 class RepositoryServiceProvider extends ServiceProvider
 {
@@ -20,6 +22,9 @@ class RepositoryServiceProvider extends ServiceProvider
 
         // 店舗リポジトリ
         $this->app->bind(ShopRepositoryInterface::class, ShopRepository::class);
+
+        // レビューリポジトリ
+        $this->app->bind(ReviewRepositoryInterface::class, ReviewRepository::class);
 
         // 他のリポジトリの依存性注入をここに追加
     }
