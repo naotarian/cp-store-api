@@ -43,9 +43,7 @@ class ShopController extends Controller
             return response()->json([
                 'status' => 'success',
                 'data' => $shops
-            ])->header('Access-Control-Allow-Origin', '*')
-              ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-              ->header('Access-Control-Allow-Headers', 'Origin, Content-Type, Accept, Authorization, X-Requested-With');
+            ]);
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',

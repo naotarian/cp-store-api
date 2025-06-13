@@ -29,8 +29,6 @@ services:
       - redis
     networks:
       - cp-store-network
-    env_file:
-      - .env
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
