@@ -103,7 +103,7 @@ class FavoriteControllerTest extends TestCase
         $response->assertStatus(400)
             ->assertJson([
                 'status' => 'error',
-                'message' => '既にお気に入りに追加されています'
+                'message' => '既にお気に入りに追加済みです'
             ]);
     }
 
@@ -149,7 +149,7 @@ class FavoriteControllerTest extends TestCase
         $response->assertStatus(404)
             ->assertJson([
                 'status' => 'error',
-                'message' => 'お気に入りが見つかりませんでした'
+                'message' => 'お気に入りに登録されていません'
             ]);
     }
 

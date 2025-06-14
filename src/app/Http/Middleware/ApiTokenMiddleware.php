@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class ApiTokenMiddleware
 {
@@ -30,8 +31,15 @@ class ApiTokenMiddleware
             ], 401)->header('Access-Control-Allow-Origin', '*');
         }
 
-        // ユーザーガードでユーザーを設定
+        Log::info('ApiTokenMiddleware - User found: ' . $user->id);
+        
+        // ユーザーガードにユーザーを設定
         Auth::guard('user')->setUser($user);
+        
+        // リクエストにユーザー情報を設定（$request->user()で取得可能にする）
+        $request->setUserResolver(function () use ($user) {
+            return $user;
+        });
         
         return $next($request);
     }

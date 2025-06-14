@@ -24,8 +24,6 @@ class Shop extends Model
     protected $casts = [
         'latitude' => 'float',
         'longitude' => 'float',
-        'open_time' => 'datetime:H:i',
-        'close_time' => 'datetime:H:i',
     ];
 
     protected $appends = [
@@ -83,11 +81,5 @@ class Shop extends Model
     public function getReviewCountAttribute()
     {
         return $this->reviews()->count();
-    }
-
-    // お気に入り数を取得
-    public function getFavoriteCountAttribute()
-    {
-        return $this->favorites()->count();
     }
 }

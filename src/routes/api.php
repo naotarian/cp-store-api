@@ -20,7 +20,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ShopController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\Auth\Mobile\AuthController as MobileAuthController;
-use App\Http\Controllers\FavoriteController;
+use App\Http\Controllers\Mobile\FavoriteController;
+use App\Http\Controllers\Mobile\CouponController;
 
 /*
 |--------------------------------------------------------------------------
@@ -319,5 +320,70 @@ Route::prefix('favorites')
          */
         Route::get('/check/{shopId}', [FavoriteController::class, 'check'])->name('check');
     });
+
+/*
+|--------------------------------------------------------------------------
+| Coupon Routes
+|--------------------------------------------------------------------------
+|
+| クーポン機能
+| 顧客がクーポンを閲覧・取得・利用するためのエンドポイント
+|
+*/
+
+/**
+ * 特定店舗のクーポン一覧取得（公開）
+ * 指定された店舗で利用可能なクーポンを取得
+ * 
+ * @method GET /api/shops/{shopId}/coupons
+ * @param {int} shopId - 店舗ID
+ */
+Route::get('shops/{shopId}/coupons', [CouponController::class, 'getShopCoupons'])->name('api.shops.coupons');
+
+/**
+ * 特定店舗の現在発行中のクーポン一覧取得（公開）
+ * 指定された店舗で現在取得可能なクーポン発行情報を取得
+ * 
+ * @method GET /api/shops/{shopId}/active-issues
+ * @param {int} shopId - 店舗ID
+ */
+Route::get('shops/{shopId}/active-issues', [CouponController::class, 'getActiveIssues'])->name('api.shops.active-issues');
+
+/*
+|--------------------------------------------------------------------------
+| Protected Coupon Routes (認証必要)
+|--------------------------------------------------------------------------
+*/
+
+Route::middleware(\App\Http\Middleware\ApiTokenMiddleware::class)->group(function () {
+    /**
+     * クーポンを取得
+     * 発行中のクーポンを取得してユーザーのクーポン一覧に追加
+     * 
+     * @method POST /api/coupon-issues/{issueId}/acquire
+     * @auth Bearer Token
+     * @param {string} issueId - クーポン発行ID
+     */
+    Route::post('coupon-issues/{issueId}/acquire', [CouponController::class, 'acquireCoupon'])->name('api.coupon-issues.acquire');
+    
+    /**
+     * ユーザーの取得済みクーポン一覧取得
+     * 現在のユーザーが取得した全クーポンを取得
+     * 
+     * @method GET /api/user/coupons
+     * @auth Bearer Token
+     */
+    Route::get('user/coupons', [CouponController::class, 'getUserCoupons'])->name('api.user.coupons');
+    
+    /**
+     * クーポンを使用
+     * 取得済みクーポンを使用済み状態に変更
+     * 
+     * @method POST /api/user/coupons/{acquisitionId}/use
+     * @auth Bearer Token
+     * @param {string} acquisitionId - クーポン取得ID
+     */
+    Route::post('user/coupons/{acquisitionId}/use', [CouponController::class, 'useCoupon'])->name('api.user.coupons.use');
+});
 
 
