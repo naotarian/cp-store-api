@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
         $this->call([
             ShopSeeder::class,
             ReviewSeeder::class,
+            ShopAdminSeeder::class, // 店舗管理者を作成
+            CouponSeeder::class,    // クーポン機能（店舗・管理者が必要なので最後）
         ]);
     }
 }

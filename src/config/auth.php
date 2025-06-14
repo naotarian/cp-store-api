@@ -14,7 +14,7 @@ return [
     */
 
     'defaults' => [
-        'guard' => env('AUTH_GUARD', 'api'),
+        'guard' => env('AUTH_GUARD', 'shop'),
         'passwords' => env('AUTH_PASSWORD_BROKER', 'users'),
     ],
 
@@ -23,28 +23,39 @@ return [
     | Authentication Guards
     |--------------------------------------------------------------------------
     |
-    | Next, you may define every authentication guard for your application.
-    | Of course, a great default configuration has been defined for you
-    | which utilizes session storage plus the Eloquent user provider.
-    |
-    | All authentication guards have a user provider, which defines how the
-    | users are actually retrieved out of your database or other storage
-    | system used by the application. Typically, Eloquent is utilized.
-    |
-    | Supported: "session", "token"
+    | CP-Store 認証ガード設計:
+    | 
+    | 1. api - エンドユーザー (モバイル+Web)
+    | 2. sanctum - 店舗管理者 
+    | 3. root_sanctum - 運営管理者 (将来実装)
     |
     */
 
     'guards' => [
+        // Web用（未使用）
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
         ],
-        'api' => [
+        
+        // エンドユーザー認証（モバイルアプリ + Web版）
+        'user' => [
             'driver' => 'session',
             'provider' => 'users',
             'hash' => false,
         ],
+        
+        // 店舗管理者認証（店舗管理画面）
+        'shop' => [
+            'driver' => 'sanctum',
+            'provider' => 'shop_admins',
+        ],
+        
+        // 運営管理者認証（将来実装予定）
+        // 'root' => [
+        //     'driver' => 'sanctum',
+        //     'provider' => 'roots',
+        // ],
     ],
 
     /*
@@ -52,27 +63,31 @@ return [
     | User Providers
     |--------------------------------------------------------------------------
     |
-    | All authentication guards have a user provider, which defines how the
-    | users are actually retrieved out of your database or other storage
-    | system used by the application. Typically, Eloquent is utilized.
-    |
-    | If you have multiple user tables or models you may configure multiple
-    | providers to represent the model / table. These providers may then
-    | be assigned to any extra authentication guards you have defined.
-    |
-    | Supported: "database", "eloquent"
+    | CP-Store ユーザープロバイダー設計:
+    | 
+    | 1. users - エンドユーザー (User モデル)
+    | 2. shop_admins - 店舗管理者 (ShopAdmin モデル)  
+    | 3. roots - 運営管理者 (Root モデル - 将来実装)
     |
     */
 
     'providers' => [
+        // エンドユーザープロバイダー
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            'model' => App\Models\User::class,
         ],
-
-        // 'users' => [
-        //     'driver' => 'database',
-        //     'table' => 'users',
+        
+        // 店舗管理者プロバイダー
+        'shop_admins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\ShopAdmin::class,
+        ],
+        
+        // 運営管理者プロバイダー（将来実装予定）
+        // 'roots' => [
+        //     'driver' => 'eloquent', 
+        //     'model' => App\Models\Root::class,
         // ],
     ],
 
@@ -96,12 +111,29 @@ return [
     */
 
     'passwords' => [
+        // エンドユーザー用パスワードリセット
         'users' => [
             'provider' => 'users',
-            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'table' => 'password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],
+        
+        // 店舗管理者用パスワードリセット
+        'shop_admins' => [
+            'provider' => 'shop_admins',
+            'table' => 'password_reset_tokens',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+        
+        // 運営管理者用パスワードリセット（将来実装予定）
+        // 'roots' => [
+        //     'provider' => 'roots',
+        //     'table' => 'password_reset_tokens', 
+        //     'expire' => 60,
+        //     'throttle' => 60,
+        // ],
     ],
 
     /*

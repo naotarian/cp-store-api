@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Auth\Mobile;
 
+use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -67,7 +68,7 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
-        if (!Auth::guard('api')->attempt($credentials)) {
+        if (!Auth::guard('user')->attempt($credentials)) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'パスワードが正しくありません。',
@@ -75,7 +76,7 @@ class AuthController extends Controller
         }
 
        /** @var User $user */
-        $user = Auth::guard('api')->user();
+        $user = Auth::guard('user')->user();
         
         // APIトークンを生成
         $token = $user->generateApiToken();
@@ -95,9 +96,9 @@ class AuthController extends Controller
      */
     public function logout(Request $request): JsonResponse
     {
-        if (Auth::guard('api')->check()) {
+        if (Auth::guard('user')->check()) {
             /** @var User $user */
-            $user = Auth::guard('api')->user();
+            $user = Auth::guard('user')->user();
             // APIトークンを削除
             $user->update(['api_token' => null]);
         }
@@ -113,7 +114,7 @@ class AuthController extends Controller
      */
     public function user(Request $request): JsonResponse
     {
-        if (!Auth::guard('api')->check()) {
+        if (!Auth::guard('user')->check()) {
             return response()->json([
                 'status' => 'error',
                 'message' => '認証が必要です'
@@ -121,7 +122,7 @@ class AuthController extends Controller
         }
 
         /** @var User $user */
-        $user = Auth::guard('api')->user();
+        $user = Auth::guard('user')->user();
         
         // お気に入り店舗数とレビュー数を取得
         $favoriteCount = $user->favoriteShops()->count();
@@ -147,7 +148,7 @@ class AuthController extends Controller
      */
     public function updateProfile(Request $request): JsonResponse
     {
-        if (!Auth::guard('api')->check()) {
+        if (!Auth::guard('user')->check()) {
             return response()->json([
                 'status' => 'error',
                 'message' => '認証が必要です'
@@ -155,7 +156,7 @@ class AuthController extends Controller
         }
 
         /** @var User $user */
-        $user = Auth::guard('api')->user();
+        $user = Auth::guard('user')->user();
 
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|string|max:255',
@@ -192,4 +193,4 @@ class AuthController extends Controller
             ]
         ])->header('Access-Control-Allow-Origin', '*');
     }
-}
+} 

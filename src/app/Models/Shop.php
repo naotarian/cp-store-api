@@ -51,6 +51,30 @@ class Shop extends Model
                     ->withTimestamps();
     }
 
+    // 店舗管理者へのリレーション
+    public function admins()
+    {
+        return $this->hasMany(ShopAdmin::class);
+    }
+
+    // 店舗管理者へのリレーション（別名）- Seederとの互換性のため
+    public function shopAdmins()
+    {
+        return $this->hasMany(ShopAdmin::class);
+    }
+
+    // アクティブな管理者のみ
+    public function activeAdmins()
+    {
+        return $this->hasMany(ShopAdmin::class)->where('is_active', true);
+    }
+
+    // ルート管理者を取得
+    public function rootAdmin()
+    {
+        return $this->hasOne(ShopAdmin::class)->where('role', 'root');
+    }
+
     public function getAverageRatingAttribute()
     {
         return $this->reviews()->avg('rating') ?? 0;

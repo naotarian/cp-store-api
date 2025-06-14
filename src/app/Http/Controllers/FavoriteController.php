@@ -38,14 +38,14 @@ class FavoriteController extends Controller
      */
     public function index(): JsonResponse
     {
-        if (!Auth::guard('api')->check()) {
+        if (!Auth::guard('user')->check()) {
             return response()->json([
                 'status' => 'error',
                 'message' => '認証が必要です'
             ], 401);
         }
 
-        $favoriteShops = $this->getFavoritesUseCase->execute(Auth::guard('api')->user());
+        $favoriteShops = $this->getFavoritesUseCase->execute(Auth::guard('user')->user());
 
         return response()->json([
             'status' => 'success',
@@ -58,7 +58,7 @@ class FavoriteController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        if (!Auth::check()) {
+        if (!Auth::guard('user')->check()) {
             return response()->json([
                 'status' => 'error',
                 'message' => '認証が必要です'
@@ -70,7 +70,7 @@ class FavoriteController extends Controller
         ]);
 
         try {
-            $this->addFavoriteUseCase->execute(Auth::guard('api')->user(), $request->shop_id);
+            $this->addFavoriteUseCase->execute(Auth::guard('user')->user(), $request->shop_id);
             return response()->json([
                 'status' => 'success',
                 'message' => 'お気に入りに追加しました'
@@ -88,7 +88,7 @@ class FavoriteController extends Controller
      */
     public function destroy($shopId): JsonResponse
     {
-        if (!Auth::check()) {
+        if (!Auth::guard('user')->check()) {
             return response()->json([
                 'status' => 'error',
                 'message' => '認証が必要です'
@@ -96,7 +96,7 @@ class FavoriteController extends Controller
         }
 
         try {
-            $this->removeFavoriteUseCase->execute(Auth::guard('api')->user(), $shopId);
+            $this->removeFavoriteUseCase->execute(Auth::guard('user')->user(), $shopId);
             return response()->json([
                 'status' => 'success',
                 'message' => 'お気に入りから削除しました'
@@ -114,7 +114,7 @@ class FavoriteController extends Controller
      */
     public function toggle(Request $request): JsonResponse
     {
-        if (!Auth::check()) {
+        if (!Auth::guard('user')->check()) {
             return response()->json([
                 'status' => 'error',
                 'message' => '認証が必要です'
@@ -125,7 +125,7 @@ class FavoriteController extends Controller
             'shop_id' => 'required|string|exists:shops,id'
         ]);
 
-        $isFavorite = $this->toggleFavoriteUseCase->execute(Auth::guard('api')->user(), $request->shop_id);
+                    $isFavorite = $this->toggleFavoriteUseCase->execute(Auth::guard('user')->user(), $request->shop_id);
 
         return response()->json([
             'status' => 'success',
@@ -139,14 +139,14 @@ class FavoriteController extends Controller
      */
     public function check($shopId): JsonResponse
     {
-        if (!Auth::check()) {
+        if (!Auth::guard('user')->check()) {
             return response()->json([
                 'status' => 'success',
                 'is_favorite' => false
             ]);
         }
 
-        $isFavorite = $this->checkFavoriteUseCase->execute(Auth::guard('api')->user(), $shopId);
+        $isFavorite = $this->checkFavoriteUseCase->execute(Auth::guard('user')->user(), $shopId);
         return response()->json([
             'status' => 'success',
             'is_favorite' => $isFavorite

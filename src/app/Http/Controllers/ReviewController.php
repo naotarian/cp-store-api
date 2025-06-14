@@ -97,7 +97,7 @@ class ReviewController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        if (!Auth::check()) {
+        if (!Auth::guard('user')->check()) {
             return response()->json([
                 'status' => 'error',
                 'message' => '認証が必要です'
@@ -111,7 +111,7 @@ class ReviewController extends Controller
                 'comment' => 'nullable|string|max:1000',
             ]);
 
-            $validated['user_id'] = Auth::id();
+            $validated['user_id'] = Auth::guard('user')->id();
 
             $review = $this->createReviewUseCase->execute($validated);
 
@@ -142,7 +142,7 @@ class ReviewController extends Controller
      */
     public function update(Request $request, string $id): JsonResponse
     {
-        if (!Auth::check()) {
+        if (!Auth::guard('user')->check()) {
             return response()->json([
                 'status' => 'error',
                 'message' => '認証が必要です'
@@ -182,7 +182,7 @@ class ReviewController extends Controller
      */
     public function destroy(string $id): JsonResponse
     {
-        if (!Auth::check()) {
+        if (!Auth::guard('user')->check()) {
             return response()->json([
                 'status' => 'error',
                 'message' => '認証が必要です'

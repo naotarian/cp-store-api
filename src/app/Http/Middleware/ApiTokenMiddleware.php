@@ -30,8 +30,8 @@ class ApiTokenMiddleware
             ], 401)->header('Access-Control-Allow-Origin', '*');
         }
 
-        // APIガードでユーザーを設定
-        Auth::guard('api')->setUser($user);
+        // ユーザーガードでユーザーを設定
+        Auth::guard('user')->setUser($user);
         
         return $next($request);
     }
