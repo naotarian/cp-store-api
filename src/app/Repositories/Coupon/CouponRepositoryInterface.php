@@ -56,4 +56,14 @@ interface CouponRepositoryInterface
      * IDでクーポン発行を取得
      */
     public function findCouponIssueById(string $id);
+
+    /**
+     * クーポンスケジュールを作成
+     */
+    public function createCouponSchedule(array $data);
+
+    /**
+     * 今日のスケジュールを取得
+     */
+    public function getTodaySchedulesByShop(string $shopId): Collection;
 } 

@@ -5,17 +5,18 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CreateCouponScheduleRequest;
 use App\Http\Requests\Admin\UpdateCouponScheduleRequest;
-use App\Models\CouponSchedule;
 use App\UseCases\Coupon\GetAllCouponsUseCase;
 use App\UseCases\Coupon\GetActiveCouponIssuesUseCase;
 use App\UseCases\Coupon\GetCouponSchedulesUseCase;
 use App\UseCases\Coupon\CreateCouponScheduleUseCase;
+use App\UseCases\Coupon\UpdateCouponScheduleUseCase;
+use App\UseCases\Coupon\DeleteCouponScheduleUseCase;
+use App\UseCases\Coupon\ToggleCouponScheduleStatusUseCase;
 use App\UseCases\Coupon\GetTodaySchedulesUseCase;
 use App\UseCases\Coupon\IssueCouponNowUseCase;
 use App\UseCases\Coupon\StopCouponIssueUseCase;
 use App\UseCases\Coupon\CreateCouponUseCase;
 use App\UseCases\Coupon\UpdateCouponUseCase;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -27,6 +28,9 @@ class CouponController extends Controller
     private $getActiveCouponIssuesUseCase;
     private $getCouponSchedulesUseCase;
     private $createCouponScheduleUseCase;
+    private $updateCouponScheduleUseCase;
+    private $deleteCouponScheduleUseCase;
+    private $toggleCouponScheduleStatusUseCase;
     private $getTodaySchedulesUseCase;
     private $issueCouponNowUseCase;
     private $stopCouponIssueUseCase;
@@ -38,6 +42,9 @@ class CouponController extends Controller
         GetActiveCouponIssuesUseCase $getActiveCouponIssuesUseCase,
         GetCouponSchedulesUseCase $getCouponSchedulesUseCase,
         CreateCouponScheduleUseCase $createCouponScheduleUseCase,
+        UpdateCouponScheduleUseCase $updateCouponScheduleUseCase,
+        DeleteCouponScheduleUseCase $deleteCouponScheduleUseCase,
+        ToggleCouponScheduleStatusUseCase $toggleCouponScheduleStatusUseCase,
         GetTodaySchedulesUseCase $getTodaySchedulesUseCase,
         IssueCouponNowUseCase $issueCouponNowUseCase,
         StopCouponIssueUseCase $stopCouponIssueUseCase,
@@ -48,6 +55,9 @@ class CouponController extends Controller
         $this->getActiveCouponIssuesUseCase = $getActiveCouponIssuesUseCase;
         $this->getCouponSchedulesUseCase = $getCouponSchedulesUseCase;
         $this->createCouponScheduleUseCase = $createCouponScheduleUseCase;
+        $this->updateCouponScheduleUseCase = $updateCouponScheduleUseCase;
+        $this->deleteCouponScheduleUseCase = $deleteCouponScheduleUseCase;
+        $this->toggleCouponScheduleStatusUseCase = $toggleCouponScheduleStatusUseCase;
         $this->getTodaySchedulesUseCase = $getTodaySchedulesUseCase;
         $this->issueCouponNowUseCase = $issueCouponNowUseCase;
         $this->stopCouponIssueUseCase = $stopCouponIssueUseCase;
@@ -76,17 +86,7 @@ class CouponController extends Controller
                 'status' => 'success',
                 'message' => 'クーポンを作成しました',
                 'data' => [
-                    'coupon' => [
-                        'id' => $coupon->id,
-                        'title' => $coupon->title,
-                        'description' => $coupon->description,
-                        'conditions' => $coupon->conditions,
-                        'notes' => $coupon->notes,
-                        'image_url' => $coupon->image_url,
-                        'is_active' => $coupon->is_active,
-                        'created_at' => $coupon->created_at->format('Y-m-d H:i:s'),
-                        'updated_at' => $coupon->updated_at->format('Y-m-d H:i:s'),
-                    ]
+                    'coupon' => $this->formatCouponResponse($coupon)
                 ]
             ], 201);
         } catch (\Exception $e) {
@@ -118,20 +118,19 @@ class CouponController extends Controller
                 'status' => 'success',
                 'message' => 'クーポンを更新しました',
                 'data' => [
-                    'coupon' => [
-                        'id' => $coupon->id,
-                        'title' => $coupon->title,
-                        'description' => $coupon->description,
-                        'conditions' => $coupon->conditions,
-                        'notes' => $coupon->notes,
-                        'image_url' => $coupon->image_url,
-                        'is_active' => $coupon->is_active,
-                        'created_at' => $coupon->created_at->format('Y-m-d H:i:s'),
-                        'updated_at' => $coupon->updated_at->format('Y-m-d H:i:s'),
-                    ]
+                    'coupon' => $this->formatCouponResponse($coupon)
                 ]
             ]);
         } catch (\Exception $e) {
+            // クーポンが見つからない場合は404を返す
+            if (str_contains($e->getMessage(), 'クーポンが見つかりません') || 
+                str_contains($e->getMessage(), '権限がありません')) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => $e->getMessage()
+                ], 404);
+            }
+            
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage()
@@ -151,21 +150,12 @@ class CouponController extends Controller
             'status' => 'success',
             'data' => [
                 'coupons' => $coupons->map(function ($coupon) {
-                    return [
-                        'id' => $coupon->id,
-                        'title' => $coupon->title,
-                        'description' => $coupon->description,
-                        'conditions' => $coupon->conditions,
-                        'notes' => $coupon->notes,
-                        'image_url' => $coupon->image_url,
-                        'is_active' => $coupon->is_active,
-                        'created_at' => $coupon->created_at->format('Y-m-d H:i:s'),
-                        'updated_at' => $coupon->updated_at->format('Y-m-d H:i:s'),
-                        // 関連データ
-                        'active_issues_count' => $coupon->activeIssues()->count(),
-                        'schedules_count' => $coupon->activeSchedules()->count(),
-                        'total_issues_count' => $coupon->issues()->count(),
-                    ];
+                    $couponData = $this->formatCouponResponse($coupon);
+                    // 関連データを追加
+                    $couponData['active_issues_count'] = $coupon->activeIssues()->count();
+                    $couponData['schedules_count'] = $coupon->activeSchedules()->count();
+                    $couponData['total_issues_count'] = $coupon->issues()->count();
+                    return $couponData;
                 })
             ]
         ]);
@@ -187,8 +177,8 @@ class CouponController extends Controller
                         'id' => $issue->id,
                         'coupon_id' => $issue->coupon_id,
                         'issue_type' => $issue->issue_type,
-                        'start_time' => $issue->start_time->format('Y-m-d H:i:s'),
-                        'end_time' => $issue->end_time->format('Y-m-d H:i:s'),
+                        'start_datetime' => $issue->start_datetime->format('Y-m-d H:i:s'),
+                        'end_datetime' => $issue->end_datetime->format('Y-m-d H:i:s'),
                         'duration_minutes' => $issue->duration_minutes,
                         'max_acquisitions' => $issue->max_acquisitions,
                         'current_acquisitions' => $issue->current_acquisitions,
@@ -201,6 +191,9 @@ class CouponController extends Controller
                         'coupon' => [
                             'id' => $issue->coupon->id,
                             'title' => $issue->coupon->title,
+                            'description' => $issue->coupon->description,
+                            'conditions' => $issue->coupon->conditions,
+                            'notes' => $issue->coupon->notes,
                         ],
                         // 発行者情報
                         'issuer' => $issue->issuer ? [
@@ -211,6 +204,60 @@ class CouponController extends Controller
                 })
             ]
         ]);
+    }
+
+    /**
+     * 時刻文字列をHH:MM形式にフォーマット
+     */
+    private function formatTimeString($time): string
+    {
+        if (is_string($time)) {
+            // HH:MM:SS形式の場合はHH:MM形式に変換
+            return strlen($time) > 5 ? substr($time, 0, 5) : $time;
+        }
+        return $time->format('H:i');
+    }
+
+    /**
+     * クーポンレスポンス形成
+     */
+    private function formatCouponResponse($coupon): array
+    {
+        return [
+            'id' => $coupon->id,
+            'title' => $coupon->title,
+            'description' => $coupon->description,
+            'conditions' => $coupon->conditions,
+            'notes' => $coupon->notes,
+            'image_url' => $coupon->image_url,
+            'is_active' => $coupon->is_active,
+            'created_at' => $coupon->created_at->format('Y-m-d H:i:s'),
+            'updated_at' => $coupon->updated_at->format('Y-m-d H:i:s'),
+        ];
+    }
+
+    /**
+     * スケジュールレスポンス形成
+     */
+    private function formatScheduleResponse($schedule): array
+    {
+        return [
+            'id' => $schedule->id,
+            'coupon_id' => $schedule->coupon_id,
+            'schedule_name' => $schedule->schedule_name,
+            'day_type' => $schedule->day_type,
+            'day_type_display' => $schedule->day_type_display,
+            'custom_days' => $schedule->custom_days,
+            'start_time' => $this->formatTimeString($schedule->start_time),
+            'end_time' => $this->formatTimeString($schedule->end_time),
+            'time_range_display' => $schedule->time_range_display,
+            'duration_minutes' => $schedule->duration_minutes,
+            'max_acquisitions' => $schedule->max_acquisitions,
+            'valid_from' => $schedule->valid_from->format('Y-m-d'),
+            'valid_until' => $schedule->valid_until ? $schedule->valid_until->format('Y-m-d') : null,
+            'is_active' => $schedule->is_active,
+            'created_at' => $schedule->created_at->format('Y-m-d H:i:s'),
+        ];
     }
 
     /**
@@ -232,8 +279,8 @@ class CouponController extends Controller
                         'day_type' => $schedule->day_type,
                         'day_type_display' => $schedule->day_type_display,
                         'custom_days' => $schedule->custom_days,
-                        'start_time' => $schedule->start_time->format('H:i'),
-                        'end_time' => $schedule->end_time->format('H:i'),
+                        'start_time' => $this->formatTimeString($schedule->start_time),
+                        'end_time' => $this->formatTimeString($schedule->end_time),
                         'time_range_display' => $schedule->time_range_display,
                         'duration_minutes' => $schedule->duration_minutes,
                         'max_acquisitions' => $schedule->max_acquisitions,
@@ -245,6 +292,9 @@ class CouponController extends Controller
                         'coupon' => [
                             'id' => $schedule->coupon->id,
                             'title' => $schedule->coupon->title,
+                            'description' => $schedule->coupon->description,
+                            'conditions' => $schedule->coupon->conditions,
+                            'notes' => $schedule->coupon->notes,
                         ],
                     ];
                 })
@@ -274,7 +324,7 @@ class CouponController extends Controller
                 'message' => 'クーポンを発行しました',
                 'data' => [
                     'issue_id' => $issue->id,
-                    'end_time' => $issue->end_time->format('Y-m-d H:i:s'),
+                    'end_time' => $issue->end_datetime->format('Y-m-d H:i:s'),
                 ]
             ]);
         } catch (\Exception $e) {
@@ -319,23 +369,7 @@ class CouponController extends Controller
                 'status' => 'success',
                 'message' => 'スケジュールを作成しました',
                 'data' => [
-                    'schedule' => [
-                        'id' => $schedule->id,
-                        'coupon_id' => $schedule->coupon_id,
-                        'schedule_name' => $schedule->schedule_name,
-                        'day_type' => $schedule->day_type,
-                        'day_type_display' => $schedule->day_type_display,
-                        'custom_days' => $schedule->custom_days,
-                        'start_time' => $schedule->start_time->format('H:i'),
-                        'end_time' => $schedule->end_time->format('H:i'),
-                        'time_range_display' => $schedule->time_range_display,
-                        'duration_minutes' => $schedule->duration_minutes,
-                        'max_acquisitions' => $schedule->max_acquisitions,
-                        'valid_from' => $schedule->valid_from->format('Y-m-d'),
-                        'valid_until' => $schedule->valid_until ? $schedule->valid_until->format('Y-m-d') : null,
-                        'is_active' => $schedule->is_active,
-                        'created_at' => $schedule->created_at->format('Y-m-d H:i:s'),
-                    ]
+                    'schedule' => $this->formatScheduleResponse($schedule)
                 ]
             ], 201);
         } catch (\Exception $e) {
@@ -353,17 +387,7 @@ class CouponController extends Controller
     {
         try {
             $admin = Auth::user();
-            
-            // バリデーション済みデータを取得
-            $validated = $request->validated();
-
-            // スケジュールを取得
-            $schedule = CouponSchedule::where('id', $id)
-                ->where('shop_id', $admin->shop_id)
-                ->firstOrFail();
-
-            // スケジュールを更新
-            $schedule->update($validated);
+            $schedule = $this->updateCouponScheduleUseCase->execute($admin, $id, $request->validated());
 
             return response()->json([
                 'status' => 'success',
@@ -374,8 +398,8 @@ class CouponController extends Controller
                         'schedule_name' => $schedule->schedule_name,
                         'day_type' => $schedule->day_type,
                         'day_type_display' => $schedule->day_type_display,
-                        'start_time' => $schedule->start_time->format('H:i'),
-                        'end_time' => $schedule->end_time->format('H:i'),
+                        'start_time' => $this->formatTimeString($schedule->start_time),
+                        'end_time' => $this->formatTimeString($schedule->end_time),
                         'time_range_display' => $schedule->time_range_display,
                         'duration_minutes' => $schedule->duration_minutes,
                         'max_acquisitions' => $schedule->max_acquisitions,
@@ -399,14 +423,7 @@ class CouponController extends Controller
     {
         try {
             $admin = Auth::user();
-            
-            // スケジュールを取得
-            $schedule = CouponSchedule::where('id', $id)
-                ->where('shop_id', $admin->shop_id)
-                ->firstOrFail();
-
-            // スケジュールを削除
-            $schedule->delete();
+            $this->deleteCouponScheduleUseCase->execute($admin, $id);
 
             return response()->json([
                 'status' => 'success',
@@ -428,19 +445,11 @@ class CouponController extends Controller
         try {
             Log::info('toggleScheduleStatus', ['id' => $id]);
             $admin = Auth::user();
-            
-            // スケジュールを取得
-            $schedule = CouponSchedule::where('id', $id)
-                ->where('shop_id', $admin->shop_id)
-                ->firstOrFail();
-
-            // ステータスを切り替え
-            $newStatus = !$schedule->is_active;
-            $schedule->update(['is_active' => $newStatus]);
+            $schedule = $this->toggleCouponScheduleStatusUseCase->execute($admin, $id);
 
             return response()->json([
                 'status' => 'success',
-                'message' => $newStatus ? 'スケジュールを有効にしました' : 'スケジュールを無効にしました',
+                'message' => $schedule->is_active ? 'スケジュールを有効にしました' : 'スケジュールを無効にしました',
                 'data' => [
                     'schedule' => [
                         'id' => $schedule->id,
@@ -475,8 +484,8 @@ class CouponController extends Controller
                             'schedule_name' => $schedule->schedule_name,
                             'day_type_display' => $schedule->day_type_display,
                             'time_range_display' => $schedule->time_range_display,
-                            'start_time' => $schedule->start_time->format('H:i'),
-                            'end_time' => $schedule->end_time->format('H:i'),
+                            'start_time' => $this->formatTimeString($schedule->start_time),
+                            'end_time' => $this->formatTimeString($schedule->end_time),
                             'duration_minutes' => $schedule->duration_minutes,
                             'max_acquisitions' => $schedule->max_acquisitions,
                             'is_active' => $schedule->is_active,

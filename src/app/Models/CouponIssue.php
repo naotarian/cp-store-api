@@ -18,11 +18,8 @@ class CouponIssue extends Model
         'shop_id',
         'schedule_id',
         'issue_type',
-        'target_date',
-        'start_time_only',
-        'end_time_only',
-        'start_time',
-        'end_time',
+        'start_datetime',
+        'end_datetime',
         'max_acquisitions',
         'current_acquisitions',
         'status',
@@ -32,9 +29,8 @@ class CouponIssue extends Model
     ];
 
     protected $casts = [
-        'target_date' => 'date',
-        'start_time' => 'datetime',
-        'end_time' => 'datetime',
+        'start_datetime' => 'datetime',
+        'end_datetime' => 'datetime',
         'issued_at' => 'datetime',
         'is_active' => 'boolean',
         'max_acquisitions' => 'integer',
@@ -103,7 +99,7 @@ class CouponIssue extends Model
     {
         return $this->status === 'active' &&
                $this->is_active &&
-               now()->between($this->start_time, $this->end_time) &&
+               now()->between($this->start_datetime, $this->end_datetime) &&
                ($this->max_acquisitions === null || $this->current_acquisitions < $this->max_acquisitions);
     }
 
@@ -124,11 +120,11 @@ class CouponIssue extends Model
      */
     public function getTimeRemainingAttribute(): ?int
     {
-        if (now()->isAfter($this->end_time)) {
+        if (now()->isAfter($this->end_datetime)) {
             return 0;
         }
 
-        return now()->diffInMinutes($this->end_time);
+        return now()->diffInMinutes($this->end_datetime);
     }
 
     /**
@@ -136,7 +132,7 @@ class CouponIssue extends Model
      */
     public function getDurationMinutesAttribute(): int
     {
-        return $this->start_time->diffInMinutes($this->end_time);
+        return $this->start_datetime->diffInMinutes($this->end_datetime);
     }
 
     /**
@@ -153,8 +149,8 @@ class CouponIssue extends Model
     public function scopeAvailable($query)
     {
         return $query->active()
-                    ->where('start_time', '<=', now())
-                    ->where('end_time', '>', now());
+                    ->where('start_datetime', '<=', now())
+                    ->where('end_datetime', '>', now());
     }
 
     /**
@@ -197,7 +193,7 @@ class CouponIssue extends Model
      */
     public function checkExpiration(): void
     {
-        if (now()->isAfter($this->end_time) && $this->status === 'active') {
+        if (now()->isAfter($this->end_datetime) && $this->status === 'active') {
             $this->update(['status' => 'expired']);
         }
     }

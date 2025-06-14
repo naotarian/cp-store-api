@@ -34,8 +34,6 @@ class CouponSchedule extends Model
         'last_batch_processed_date' => 'date',
         'is_active' => 'boolean',
         'custom_days' => 'array',
-        'start_time' => 'datetime:H:i',
-        'end_time' => 'datetime:H:i',
         'max_acquisitions' => 'integer',
     ];
 
@@ -200,7 +198,22 @@ class CouponSchedule extends Model
      */
     public function getTimeRangeDisplayAttribute(): string
     {
-        return $this->start_time->format('H:i') . ' - ' . $this->end_time->format('H:i');
+        $startTime = is_string($this->start_time) 
+            ? $this->start_time 
+            : $this->start_time->format('H:i');
+        $endTime = is_string($this->end_time) 
+            ? $this->end_time 
+            : $this->end_time->format('H:i');
+            
+        // HH:MM:SS形式の場合はHH:MM形式に変換
+        if (strlen($startTime) > 5) {
+            $startTime = substr($startTime, 0, 5);
+        }
+        if (strlen($endTime) > 5) {
+            $endTime = substr($endTime, 0, 5);
+        }
+            
+        return $startTime . ' - ' . $endTime;
     }
 
     /**
@@ -208,8 +221,19 @@ class CouponSchedule extends Model
      */
     public function getDurationMinutesAttribute(): int
     {
-        $start = Carbon::createFromFormat('H:i', $this->start_time->format('H:i'));
-        $end = Carbon::createFromFormat('H:i', $this->end_time->format('H:i'));
+        $startTimeString = is_string($this->start_time) 
+            ? $this->start_time 
+            : $this->start_time->format('H:i');
+        $endTimeString = is_string($this->end_time) 
+            ? $this->end_time 
+            : $this->end_time->format('H:i');
+            
+        // 時刻文字列の形式を判定してパース
+        $startFormat = strlen($startTimeString) > 5 ? 'H:i:s' : 'H:i';
+        $endFormat = strlen($endTimeString) > 5 ? 'H:i:s' : 'H:i';
+        
+        $start = Carbon::createFromFormat($startFormat, $startTimeString);
+        $end = Carbon::createFromFormat($endFormat, $endTimeString);
         
         return $start->diffInMinutes($end);
     }

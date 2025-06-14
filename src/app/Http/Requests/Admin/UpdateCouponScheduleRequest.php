@@ -25,6 +25,9 @@ class UpdateCouponScheduleRequest extends FormRequest
     {
         return [
             'schedule_name' => 'required|string|max:255',
+            'day_type' => 'required|in:daily,weekdays,weekends,custom',
+            'custom_days' => 'required_if:day_type,custom|array',
+            'custom_days.*' => 'integer|between:0,6',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
             'max_acquisitions' => 'nullable|integer|min:1',
@@ -44,6 +47,12 @@ class UpdateCouponScheduleRequest extends FormRequest
         return [
             'schedule_name.required' => 'スケジュール名を入力してください',
             'schedule_name.max' => 'スケジュール名は255文字以内で入力してください',
+            'day_type.required' => 'スケジュールのタイプを選択してください',
+            'day_type.in' => '無効なスケジュールタイプが指定されました',
+            'custom_days.required_if' => 'カスタム日付が必要です',
+            'custom_days.array' => 'カスタム日付は配列で入力してください',
+            'custom_days.*.integer' => 'カスタム日付は数値で入力してください',
+            'custom_days.*.between' => 'カスタム日付は0から6の間で入力してください',
             'start_time.required' => '開始時間を入力してください',
             'start_time.date_format' => '開始時間の形式が正しくありません（HH:MM）',
             'end_time.required' => '終了時間を入力してください',
@@ -69,6 +78,8 @@ class UpdateCouponScheduleRequest extends FormRequest
     {
         return [
             'schedule_name' => 'スケジュール名',
+            'day_type' => 'スケジュールタイプ',
+            'custom_days' => 'カスタム日付',
             'start_time' => '開始時間',
             'end_time' => '終了時間',
             'max_acquisitions' => '取得上限数',

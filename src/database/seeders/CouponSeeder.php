@@ -203,11 +203,8 @@ class CouponSeeder extends Seeder
             'coupon_id' => $coupon->id,
             'shop_id' => $coupon->shop_id,
             'issue_type' => 'manual',
-            'target_date' => $now->toDateString(),
-            'start_time' => $now,
-            'end_time' => $endTime,
-            'start_time_only' => $now->format('H:i:s'),
-            'end_time_only' => $endTime->format('H:i:s'),
+            'start_datetime' => $now,
+            'end_datetime' => $endTime,
             'max_acquisitions' => rand(5, 30),
             'current_acquisitions' => rand(0, 5), // 既に何件か取得されている状態
             'status' => 'active',

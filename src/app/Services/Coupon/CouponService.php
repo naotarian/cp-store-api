@@ -3,7 +3,7 @@
 namespace App\Services\Coupon;
 
 use App\Models\ShopAdmin;
-use App\Repositories\Coupon\CouponRepository;
+use App\Repositories\Coupon\CouponRepositoryInterface;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -12,7 +12,7 @@ class CouponService
 {
     private $couponRepository;
 
-    public function __construct(CouponRepository $couponRepository)
+    public function __construct(CouponRepositoryInterface $couponRepository)
     {
         $this->couponRepository = $couponRepository;
     }
@@ -48,6 +48,11 @@ class CouponService
     {
         // 店舗IDを設定
         $data['shop_id'] = $admin->shop_id;
+        
+        // is_activeのデフォルト値を設定
+        if (!isset($data['is_active'])) {
+            $data['is_active'] = true;
+        }
 
         // バリデーション
         $this->validateCouponData($data);
@@ -138,11 +143,8 @@ class CouponService
         $issueData = array_merge($issueData, [
             'shop_id' => $admin->shop_id,
             'issue_type' => 'manual',
-            'target_date' => $now->format('Y-m-d'),
-            'start_time' => $now,
-            'end_time' => $endTime,
-            'start_time_only' => $now->format('H:i:s'),
-            'end_time_only' => $endTime->format('H:i:s'),
+            'start_datetime' => $now,
+            'end_datetime' => $endTime,
             'status' => 'active',
             'is_active' => true,
             'issued_by' => $admin->id,

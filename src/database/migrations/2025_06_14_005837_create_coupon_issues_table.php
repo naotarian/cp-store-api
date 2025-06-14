@@ -25,12 +25,9 @@ return new class extends Migration
             // 発行タイプ
             $table->enum('issue_type', ['manual', 'batch_generated']);
             
-            // 対象日と時間
-            $table->date('target_date')->comment('対象日（バッチ処理で生成された日付）');
-            $table->timestamp('start_time');
-            $table->timestamp('end_time');
-            $table->time('start_time_only')->comment('開始時間（時刻のみ）');
-            $table->time('end_time_only')->comment('終了時間（時刻のみ）');
+            // 開始・終了日時
+            $table->timestamp('start_datetime');
+            $table->timestamp('end_datetime');
             
             // 人数制限
             $table->integer('max_acquisitions')->nullable();
@@ -49,10 +46,9 @@ return new class extends Migration
             
             // インデックス
             $table->index('status');
-            $table->index(['start_time', 'end_time']);
-            $table->index(['target_date', 'start_time_only', 'end_time_only'], 'idx_target_date_time_range');
-            $table->index(['schedule_id', 'target_date'], 'idx_schedule_target_date');
-            $table->index(['status', 'is_active', 'target_date'], 'idx_status_active_date');
+            $table->index(['start_datetime', 'end_datetime']);
+            $table->index(['schedule_id', 'start_datetime'], 'idx_schedule_start_datetime');
+            $table->index(['status', 'is_active', 'start_datetime'], 'idx_status_active_datetime');
         });
     }
 
