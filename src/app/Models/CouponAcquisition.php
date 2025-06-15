@@ -21,12 +21,20 @@ class CouponAcquisition extends Model
         'status',
         'processed_by',
         'usage_notes',
+        'is_notification_read',
+        'notification_read_at',
+        'is_banner_shown',
+        'banner_shown_at',
     ];
 
     protected $casts = [
         'acquired_at' => 'datetime',
         'used_at' => 'datetime',
         'expired_at' => 'datetime',
+        'notification_read_at' => 'datetime',
+        'is_notification_read' => 'boolean',
+        'banner_shown_at' => 'datetime',
+        'is_banner_shown' => 'boolean',
     ];
 
     protected $appends = [
@@ -72,6 +80,9 @@ class CouponAcquisition extends Model
      */
     public function getIsExpiredAttribute(): bool
     {
+        if (!$this->expired_at) {
+            return false;
+        }
         return now()->isAfter($this->expired_at);
     }
 
@@ -88,7 +99,7 @@ class CouponAcquisition extends Model
      */
     public function getTimeUntilExpiryAttribute(): ?int
     {
-        if ($this->is_expired) {
+        if (!$this->expired_at || $this->is_expired) {
             return 0;
         }
 

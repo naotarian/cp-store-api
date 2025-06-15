@@ -18,6 +18,7 @@ class ReviewSeeder extends Seeder
     {
         // まずテストユーザーを作成
         $users = [
+            ['name' => 'テストユーザー', 'email' => 'test@example.com'],
             ['name' => '田中太郎', 'email' => 'tanaka@example.com'],
             ['name' => '佐藤花子', 'email' => 'sato@example.com'],
             ['name' => '山田次郎', 'email' => 'yamada@example.com'],

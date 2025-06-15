@@ -573,5 +573,112 @@ Route::middleware('auth:shop')->name('admin.')->group(function () {
          * }
          */
         Route::post('/issues/{issueId}/stop', [App\Http\Controllers\Admin\CouponController::class, 'stopIssue'])->name('stop-issue');
+
+        /**
+         * クーポン取得通知一覧を取得
+         * 
+         * @method GET /admin/coupons/acquisition-notifications
+         * @auth Bearer Token (Sanctum)
+         * @response {
+         *   "status": "success",
+         *   "data": {
+         *     "notifications": [
+         *       {
+         *         "id": "01HWFGJ8K3X...",
+         *         "user_id": "01HWFGJ8K3X...",
+         *         "user_name": "山田太郎",
+         *         "user_avatar": "https://example.com/avatar.jpg",
+         *         "acquired_at": "2024-01-15T10:30:00Z",
+         *         "is_read": false,
+         *         "coupon_issue": {
+         *           "id": "01HWFGJ8K3X...",
+         *           "issue_type": "manual",
+         *           "coupon": {
+         *             "id": "01HWFGJ8K3X...",
+         *             "title": "ドリンク10%OFF",
+         *             "description": "全ドリンクメニューが10%割引"
+         *           }
+         *         }
+         *       }
+         *     ],
+         *     "unread_count": 5
+         *   }
+         * }
+         */
+        Route::get('/acquisition-notifications', [App\Http\Controllers\Admin\CouponController::class, 'acquisitionNotifications'])->name('acquisition-notifications');
+
+        /**
+         * 未読のクーポン取得通知のみを取得（バナー表示用）
+         * 
+         * @method GET /admin/coupons/unread-notifications
+         * @auth Bearer Token (Sanctum)
+         * @response {
+         *   "status": "success",
+         *   "data": {
+         *     "notifications": [
+         *       {
+         *         "id": "01HWFGJ8K3X...",
+         *         "user_id": "01HWFGJ8K3X...",
+         *         "user_name": "山田太郎",
+         *         "user_avatar": "https://example.com/avatar.jpg",
+         *         "acquired_at": "2024-01-15T10:30:00Z",
+         *         "is_read": false,
+         *         "coupon_issue": {
+         *           "id": "01HWFGJ8K3X...",
+         *           "issue_type": "manual",
+         *           "coupon": {
+         *             "id": "01HWFGJ8K3X...",
+         *             "title": "ドリンク10%OFF",
+         *             "description": "全ドリンクメニューが10%割引"
+         *           }
+         *         }
+         *       }
+         *     ],
+         *     "unread_count": 3
+         *   }
+         * }
+         */
+        Route::get('/unread-notifications', [App\Http\Controllers\Admin\CouponController::class, 'unreadNotifications'])->name('unread-notifications');
+
+        /**
+         * 取得通知を既読にする
+         * 
+         * @method POST /admin/coupons/acquisition-notifications/{notificationId}/read
+         * @auth Bearer Token (Sanctum)
+         * @param {string} notificationId - 通知ID（取得記録ID）
+         * @response {
+         *   "status": "success",
+         *   "message": "通知を既読にしました"
+         * }
+         */
+        Route::post('/acquisition-notifications/{notificationId}/read', [App\Http\Controllers\Admin\CouponController::class, 'markNotificationAsRead'])->name('acquisition-notifications.read');
+
+        /**
+         * 全ての取得通知を既読にする
+         * 
+         * @method POST /admin/coupons/acquisition-notifications/read-all
+         * @auth Bearer Token (Sanctum)
+         * @response {
+         *   "status": "success",
+         *   "message": "5件の通知を既読にしました",
+         *   "data": {
+         *     "updated_count": 5
+         *   }
+         * }
+         */
+        Route::post('/acquisition-notifications/read-all', [App\Http\Controllers\Admin\CouponController::class, 'markAllNotificationsAsRead'])->name('acquisition-notifications.read-all');
+
+        /**
+         * 通知をバナー表示済みにする
+         * 
+         * @method POST /admin/coupons/acquisition-notifications/{notificationId}/banner-shown
+         * @auth Bearer Token (Sanctum)
+         * @param {string} notificationId - 通知ID（取得記録ID）
+         * @response {
+         *   "status": "success",
+         *   "message": "通知をバナー表示済みにしました"
+         * }
+         */
+        Route::post('/acquisition-notifications/{notificationId}/banner-shown', [App\Http\Controllers\Admin\CouponController::class, 'markBannerShown'])->name('acquisition-notifications.banner-shown');
     });
 }); 

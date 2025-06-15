@@ -21,8 +21,8 @@ class ShopSeeder extends Seeder
                 'open_time' => '08:00',
                 'close_time' => '21:00',
                 'address' => '東京都渋谷区渋谷2-24-12 渋谷スカイ14F',
-                'latitude' => 35.659518,
-                'longitude' => 139.701334,
+                'latitude' => 35.537542,
+                'longitude' => 139.562358,
             ],
             [
                 'name' => 'タリーズコーヒー 表参道ヒルズ店',
@@ -31,8 +31,8 @@ class ShopSeeder extends Seeder
                 'open_time' => '09:00',
                 'close_time' => '22:00',
                 'address' => '東京都渋谷区神宮前4-12-10 表参道ヒルズ本館B3F',
-                'latitude' => 35.665498,
-                'longitude' => 139.709877,
+                'latitude' => 35.535542,
+                'longitude' => 139.560358,
             ],
             [
                 'name' => 'ドトールコーヒーショップ 新宿南口店',
@@ -41,8 +41,8 @@ class ShopSeeder extends Seeder
                 'open_time' => '07:00',
                 'close_time' => '23:00',
                 'address' => '東京都渋谷区代々木2-7-1 小田急サザンタワー1F',
-                'latitude' => 35.687574,
-                'longitude' => 139.700272,
+                'latitude' => 35.538542,
+                'longitude' => 139.563358,
             ],
             [
                 'name' => 'ブルーボトルコーヒー 青山カフェ',
@@ -51,8 +51,8 @@ class ShopSeeder extends Seeder
                 'open_time' => '08:00',
                 'close_time' => '19:00',
                 'address' => '東京都港区南青山3-13-14',
-                'latitude' => 35.668251,
-                'longitude' => 139.717209,
+                'latitude' => 35.534542,
+                'longitude' => 139.559358,
             ],
             [
                 'name' => 'コメダ珈琲店 銀座店',
@@ -61,8 +61,8 @@ class ShopSeeder extends Seeder
                 'open_time' => '07:30',
                 'close_time' => '22:30',
                 'address' => '東京都中央区銀座6-3-9',
-                'latitude' => 35.671267,
-                'longitude' => 139.765825,
+                'latitude' => 35.539542,
+                'longitude' => 139.564358,
             ],
             [
                 'name' => '珈琲館 六本木店',
@@ -71,8 +71,8 @@ class ShopSeeder extends Seeder
                 'open_time' => '08:30',
                 'close_time' => '21:30',
                 'address' => '東京都港区六本木7-15-17',
-                'latitude' => 35.662836,
-                'longitude' => 139.731003,
+                'latitude' => 35.533542,
+                'longitude' => 139.558358,
             ],
         ];
 

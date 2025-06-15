@@ -17,6 +17,11 @@ use App\UseCases\Coupon\IssueCouponNowUseCase;
 use App\UseCases\Coupon\StopCouponIssueUseCase;
 use App\UseCases\Coupon\CreateCouponUseCase;
 use App\UseCases\Coupon\UpdateCouponUseCase;
+use App\UseCases\Coupon\GetAcquisitionNotificationsUseCase;
+use App\UseCases\Coupon\GetUnreadNotificationsUseCase;
+use App\UseCases\Coupon\MarkNotificationAsReadUseCase;
+use App\UseCases\Coupon\MarkAllNotificationsAsReadUseCase;
+use App\UseCases\Coupon\MarkBannerShownUseCase;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
@@ -36,6 +41,11 @@ class CouponController extends Controller
     private $stopCouponIssueUseCase;
     private $createCouponUseCase;
     private $updateCouponUseCase;
+    private $getAcquisitionNotificationsUseCase;
+    private $getUnreadNotificationsUseCase;
+    private $markNotificationAsReadUseCase;
+    private $markAllNotificationsAsReadUseCase;
+    private $markBannerShownUseCase;
 
     public function __construct(
         GetAllCouponsUseCase $getAllCouponsUseCase,
@@ -49,7 +59,12 @@ class CouponController extends Controller
         IssueCouponNowUseCase $issueCouponNowUseCase,
         StopCouponIssueUseCase $stopCouponIssueUseCase,
         CreateCouponUseCase $createCouponUseCase,
-        UpdateCouponUseCase $updateCouponUseCase
+        UpdateCouponUseCase $updateCouponUseCase,
+        GetAcquisitionNotificationsUseCase $getAcquisitionNotificationsUseCase,
+        GetUnreadNotificationsUseCase $getUnreadNotificationsUseCase,
+        MarkNotificationAsReadUseCase $markNotificationAsReadUseCase,
+        MarkAllNotificationsAsReadUseCase $markAllNotificationsAsReadUseCase,
+        MarkBannerShownUseCase $markBannerShownUseCase
     ) {
         $this->getAllCouponsUseCase = $getAllCouponsUseCase;
         $this->getActiveCouponIssuesUseCase = $getActiveCouponIssuesUseCase;
@@ -63,6 +78,11 @@ class CouponController extends Controller
         $this->stopCouponIssueUseCase = $stopCouponIssueUseCase;
         $this->createCouponUseCase = $createCouponUseCase;
         $this->updateCouponUseCase = $updateCouponUseCase;
+        $this->getAcquisitionNotificationsUseCase = $getAcquisitionNotificationsUseCase;
+        $this->getUnreadNotificationsUseCase = $getUnreadNotificationsUseCase;
+        $this->markNotificationAsReadUseCase = $markNotificationAsReadUseCase;
+        $this->markAllNotificationsAsReadUseCase = $markAllNotificationsAsReadUseCase;
+        $this->markBannerShownUseCase = $markBannerShownUseCase;
     }
 
     /**
@@ -502,6 +522,114 @@ class CouponController extends Controller
                         ];
                     })
                 ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * クーポン取得通知一覧を取得（全ての通知）
+     */
+    public function acquisitionNotifications(): JsonResponse
+    {
+        try {
+            $admin = Auth::user();
+            $result = $this->getAcquisitionNotificationsUseCase->execute($admin);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * 未読のクーポン取得通知のみを取得（バナー表示用）
+     */
+    public function unreadNotifications(): JsonResponse
+    {
+        try {
+            $admin = Auth::user();
+            $result = $this->getUnreadNotificationsUseCase->execute($admin);
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $result
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * 取得通知を既読にする
+     */
+    public function markNotificationAsRead(string $notificationId): JsonResponse
+    {
+        try {
+            $admin = Auth::user();
+            $this->markNotificationAsReadUseCase->execute($admin, $notificationId);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => '通知を既読にしました'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * 全ての取得通知を既読にする
+     */
+    public function markAllNotificationsAsRead(): JsonResponse
+    {
+        try {
+            $admin = Auth::user();
+            $updatedCount = $this->markAllNotificationsAsReadUseCase->execute($admin);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => "{$updatedCount}件の通知を既読にしました",
+                'data' => [
+                    'updated_count' => $updatedCount
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    /**
+     * 通知をバナー表示済みにする
+     */
+    public function markBannerShown(string $notificationId): JsonResponse
+    {
+        try {
+            $admin = Auth::user();
+            $this->markBannerShownUseCase->execute($admin, $notificationId);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => '通知をバナー表示済みにしました'
             ]);
         } catch (\Exception $e) {
             return response()->json([

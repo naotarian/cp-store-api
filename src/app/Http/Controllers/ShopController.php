@@ -35,11 +35,45 @@ class ShopController extends Controller
     /**
      * Display a listing of the shops.
      */
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
         try {
-            $shops = $this->getAllShopsUseCase->execute();
-            
+            // 位置情報パラメータを取得
+            $latitude = $request->query('latitude');
+            $longitude = $request->query('longitude');
+            $radius = $request->query('radius', 1.0); // デフォルト1km
+            \Log::info($latitude);
+            \Log::info($longitude);
+            \Log::info($radius);
+
+            // バリデーション
+            if (($latitude !== null || $longitude !== null) && ($latitude === null || $longitude === null)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => '緯度と経度の両方を指定してください'
+                ], 400);
+            }
+
+            if ($latitude !== null && ($latitude < -90 || $latitude > 90)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => '緯度は-90から90の範囲で指定してください'
+                ], 400);
+            }
+
+            if ($longitude !== null && ($longitude < -180 || $longitude > 180)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => '経度は-180から180の範囲で指定してください'
+                ], 400);
+            }
+
+            $shops = $this->getAllShopsUseCase->execute(
+                $latitude ? (float)$latitude : null,
+                $longitude ? (float)$longitude : null,
+                $latitude && $longitude ? (float)$radius : null
+            );
+            \Log::info($shops->toArray());
             return response()->json([
                 'status' => 'success',
                 'data' => $shops

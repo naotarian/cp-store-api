@@ -13,8 +13,9 @@ class GetAllShopsUseCase
         $this->shopService = $shopService;
     }
 
-    public function execute()
+    public function execute(?float $latitude = null, ?float $longitude = null, ?float $radiusKm = null)
     {
-        return $this->shopService->getAllShops();
+        \Log::info('uuu');
+        return $this->shopService->getAllShops($latitude, $longitude, $radiusKm);
     }
 } 

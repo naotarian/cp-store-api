@@ -14,9 +14,12 @@ class ShopService
         $this->shopRepository = $shopRepository;
     }
 
-    public function getAllShops()
+    public function getAllShops(?float $latitude = null, ?float $longitude = null, ?float $radiusKm = null)
     {
-        return $this->shopRepository->findAll();
+        if ($latitude !== null && $longitude !== null && $radiusKm !== null) {
+            return $this->shopRepository->findByLocation($latitude, $longitude, $radiusKm);
+        }
+        return $this->shopRepository->findAll($latitude, $longitude);
     }
 
     public function getShopById(string $id)
