@@ -150,16 +150,10 @@ Route::prefix('auth')->name('api.auth.')->group(function () {
  * @routes
  *   GET    /api/shops           - 店舗一覧取得（検索・フィルタリング対応）
  *   GET    /api/shops/{id}      - 特定店舗の詳細情報取得
- *   POST   /api/shops           - 新店舗登録（管理者のみ）
- *   PUT    /api/shops/{id}      - 店舗情報更新（管理者のみ）
- *   DELETE /api/shops/{id}      - 店舗削除（管理者のみ）
  */
 Route::apiResource('shops', ShopController::class)->names([
     'index' => 'api.shops.index',
     'show' => 'api.shops.show',
-    'store' => 'api.shops.store',
-    'update' => 'api.shops.update',
-    'destroy' => 'api.shops.destroy',
 ]);
 
 /**

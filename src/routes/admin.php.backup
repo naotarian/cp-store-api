@@ -21,7 +21,6 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Auth\ShopAdmin\AuthController as ShopAdminAuthController;
 use App\Http\Controllers\Auth\ShopAdmin\PasswordController as ShopAdminPasswordController;
-use App\Http\Controllers\Admin\ShopController;
 
 /*
 |--------------------------------------------------------------------------
@@ -292,7 +291,11 @@ Route::middleware('auth:shop')->name('admin.')->group(function () {
      *   "updated_at": "2024-01-01T00:00:00.000000Z"
      * }
      */
-    Route::get('/shop', [ShopController::class, 'show'])->name('shop.show');
+    Route::get('/shop', function (\Illuminate\Http\Request $request) {
+        // 現在ログイン中の管理者の店舗情報を取得
+        $user = $request->user();
+        return response()->json($user->shop);
+    })->name('shop.show');
 
     /**
      * 店舗情報更新
@@ -304,14 +307,22 @@ Route::middleware('auth:shop')->name('admin.')->group(function () {
      *   "name": "新しい店舗名",
      *   "description": "更新された店舗説明",
      *   "address": "新しい住所",
-     *   "latitude": 35.6762,
-     *   "longitude": 139.6503,
-     *   "open_time": "09:00",
-     *   "close_time": "18:00",
-     *   "image": "https://..."
+     *   "phone": "03-9876-5432",
+     *   "email": "new-info@shop.com",
+     *   "website": "https://new-shop.com",
+     *   "opening_hours": {
+     *     "monday": {"open": "09:00", "close": "18:00"},
+     *     "tuesday": {"open": "09:00", "close": "18:00"},
+     *     ...
+     *   }
      * }
+     * @todo 実装予定 - 現在はモックレスポンス
      */
-    Route::put('/shop', [ShopController::class, 'update'])->name('shop.update');
+    Route::put('/shop', function () {
+        // 店舗情報の更新
+        // TODO: 実装予定
+        return response()->json(['message' => '店舗情報を更新しました']);
+    })->name('shop.update');
 
     /*
     |--------------------------------------------------------------------------

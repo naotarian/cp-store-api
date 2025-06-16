@@ -11,6 +11,8 @@ use App\Repositories\Review\ReviewRepositoryInterface;
 use App\Repositories\Review\ReviewRepository;
 use App\Repositories\Coupon\CouponRepositoryInterface;
 use App\Repositories\Coupon\CouponRepository;
+use App\Repositories\Admin\ShopRepositoryInterface as AdminShopRepositoryInterface;
+use App\Repositories\Admin\ShopRepository as AdminShopRepository;
 
 class RepositoryServiceProvider extends ServiceProvider
 {
@@ -30,6 +32,9 @@ class RepositoryServiceProvider extends ServiceProvider
 
         // クーポンリポジトリ
         $this->app->bind(CouponRepositoryInterface::class, CouponRepository::class);
+
+        // Admin用店舗リポジトリ
+        $this->app->bind(AdminShopRepositoryInterface::class, AdminShopRepository::class);
 
         // 他のリポジトリの依存性注入をここに追加
     }

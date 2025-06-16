@@ -63,24 +63,4 @@ class ShopRepository implements ShopRepositoryInterface
         ->orderBy('distance_km')
         ->get();
     }
-
-    public function create(array $data)
-    {
-        return Shop::create($data);
-    }
-
-    public function update(string $id, array $data)
-    {
-        $shop = Shop::find($id);
-        if ($shop) {
-            $shop->update($data);
-            return $shop;
-        }
-        return null;
-    }
-
-    public function delete(string $id)
-    {
-        return Shop::destroy($id);
-    }
 } 
